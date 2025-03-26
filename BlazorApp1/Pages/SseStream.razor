@@ -1,0 +1,39 @@
+﻿@page "/sse"
+@implements IDisposable
+
+<h3>Server-Sent Events (Blazor Server Client)</h3>
+
+<p>@message</p>
+
+@code {
+    private string message = "Waiting for server update...";
+
+    [Inject] NavigationManager Navigation { get; set; }
+    [Inject] IJSRuntime JS { get; set; }
+
+    private DotNetObjectReference<SseStream>? selfRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            selfRef = DotNetObjectReference.Create(this);
+
+            var sseUrl = "https://localhost:7127/api/sse/stream"; 
+            await JS.InvokeVoidAsync("sseInterop.startSse", sseUrl, selfRef);
+        }
+    }
+
+    [JSInvokable]
+    public Task OnSseMessage(string data)
+    {
+        message = $"Received: {data}";
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        selfRef?.Dispose();
+    }
+}
