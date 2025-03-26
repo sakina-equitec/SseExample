@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Dashboard</title>
+    <style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #333;
+    font-size: 2rem;
+    margin: 0;
+}
+
+main {
+    padding: 0 20px;
+}
+
+.stocks {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stock {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-size: 1.2rem;
+    transition: background-color 0.3s;
+}
+
+.stock.up {
+    border-left: 5px solid #28a745;
+    color: #28a745;
+}
+
+.stock.down {
+    border-left: 5px solid #dc3545;
+    color: #dc3545;
+}
+
+.stock:hover {
+    background-color: #e9ecef;
+}
+
+footer {
+    text-align: center;
+    padding: 10px;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Stock Market Dashboard</h1>
+        </header>
+        <main>
+            <div id="stocksDiv" class="stocks"></div>
+        </main>
+        <footer>
+            <p>&copy; 2024 Stock Market Inc. All rights reserved.</p>
+        </footer>
+    </div>
+    <script>
+    // Connect to the SSE endpoint
+        const eventSource = new EventSource('https://localhost:7256/StockPrice/stream');
+        const stocksDiv = document.getElementById('stocksDiv');
+
+        // Keep track of previous stock prices to detect changes
+        const previousPrices = {};
+
+        eventSource.onmessage = function(event) {
+        const updatedStocks = JSON.parse(event.data);
+
+    stocksDiv.innerHTML = ''; // Clear previous stock data
+
+    for (const [stock, stockData] of Object.entries(updatedStocks)) {
+        const { newPrice, isUp } = stockData || {}; // Destructure and handle undefined
+
+        if (typeof newPrice === 'number') {
+            // Determine the class based on isUp
+            const priceClass = isUp ? 'up' : 'down';
+            console.log(stock, stockData);
+
+            // Display stock with the appropriate color
+            stocksDiv.innerHTML += `
+                <div class="stock ${priceClass}">
+                    <div class="name">${stock}</div>
+                    <div class="price">${newPrice.toFixed(2)}</div>
+                </div>
+            `;
+        } else {
+            console.error(`Invalid price for stock ${stock}`);
+        }
+    }
+};
+
+    </script>
+</body>
+</html>
+
